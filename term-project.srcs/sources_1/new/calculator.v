@@ -84,6 +84,9 @@ module calculator(
     wire [47:0] b;
     reg [3:0] op = `OP_ADD;
     
+    wire [47:0] a_mul_b;
+    multiplier multiplier(a_mul_b, acc, b);
+    
     stringToFixedPoint s2fp(b, u6, u5, u4, u3, u2, u1, l6, l5, l4, l3, l2, l1);
     
     reg [3:0] u6, u5, u4, u3, u2, u1;
@@ -215,6 +218,7 @@ module calculator(
             case (op)
                 `OP_ADD: acc <= acc + b;
                 `OP_SUB: acc <= acc - b;
+                `OP_MUL: acc <= a_mul_b;
             endcase
             state <= `STATE_INIT;
         end
