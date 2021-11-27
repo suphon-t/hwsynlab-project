@@ -29,6 +29,8 @@
 `define STATE_COMMIT 4'h7
 `define STATE_DIVIDE 4'h8
 `define STATE_WAIT_DIVIDE 4'h9
+`define STATE_SQRT 4'ha
+`define STATE_WAIT_SQRT 4'hb
 
 `define INPUT_SPECIAL 4'h0
 `define INPUT_SIGN 4'h1
@@ -86,11 +88,12 @@ module calculator(
     wire [47:0] b;
     reg [3:0] op = `OP_ADD;
     
-    wire [47:0] a_mul_b, a_div_b;
+    wire [47:0] a_mul_b, a_div_b, a_sqrt;
     multiplier multiplier(a_mul_b, acc, b);
-    wire div_en;
-    assign div_en = state == `STATE_DIVIDE;
+    wire div_en = state == `STATE_DIVIDE;
     divider divider(div_busy, div_done, a_div_b, clock, div_en, acc, b);
+    wire sqrt_en = state == `STATE_SQRT;
+    sqrt sqrt(sqrt_busy, sqrt_done, a_sqrt, clock, sqrt_en, acc);
     
     stringToFixedPoint s2fp(b, u6, u5, u4, u3, u2, u1, l6, l5, l4, l3, l2, l1);
     
@@ -142,8 +145,8 @@ module calculator(
                     acc <= 0;
                     state <= `STATE_INIT;
                 end
-                else begin
-                    state <= `STATE_INIT;
+                else if (rx_data == `ASCII_s) begin
+                    state <= `STATE_SQRT;
                 end
             end
             if (input_stage <= `INPUT_SIGN & is_sign) begin
@@ -234,6 +237,15 @@ module calculator(
         
         if (state == `STATE_WAIT_DIVIDE & div_done) begin
             acc <= a_div_b;
+            state <= `STATE_INIT;
+        end
+        
+        if (state == `STATE_SQRT) begin
+            state <= `STATE_WAIT_SQRT;
+        end
+        
+        if (state == `STATE_WAIT_SQRT & sqrt_done) begin
+            acc <= a_sqrt;
             state <= `STATE_INIT;
         end
         
