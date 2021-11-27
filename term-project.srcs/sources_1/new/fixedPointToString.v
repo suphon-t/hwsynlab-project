@@ -21,6 +21,7 @@
 
 
 module fixedPointToString(
+    output is_neg, 
     output [3:0] u6,
     output [3:0] u5,
     output [3:0] u4,
@@ -35,6 +36,9 @@ module fixedPointToString(
     output [3:0] l1,
     input [47:0] a
     );
-    upperToString u2s(u6, u5, u4, u3, u2, u1, a[47:24]);
-    lowerToString l2s(l6, l5, l4, l3, l2, l1, a[23:0]);
+    assign is_neg = a[47];
+    wire [47:0] to_parse;
+    assign to_parse = is_neg ? -a : a;
+    upperToString u2s(u6, u5, u4, u3, u2, u1, to_parse[47:24]);
+    lowerToString l2s(l6, l5, l4, l3, l2, l1, to_parse[23:0]);
 endmodule

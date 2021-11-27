@@ -25,6 +25,7 @@ module uart_tx_buffer(
     input [LEN*8-1:0] data_transmit,
     input [8:0] transmit_len,
     input ena,
+    output sending,
     output reg sent,
     output bit_out
     );
