@@ -144,11 +144,12 @@ module calculator(
                 if (rx_data == `ASCII_c) begin
                     acc <= 0;
                     resume_state <= `STATE_INIT;
+                    state <= `STATE_SEND_ECHO;
                 end
-                else if (rx_data == `ASCII_s) begin
+                else if (rx_data == `ASCII_s & ~acc[47]) begin
                     resume_state <= `STATE_SQRT;
+                    state <= `STATE_SEND_ECHO;
                 end
-                state <= `STATE_SEND_ECHO;
             end
             if (input_stage <= `INPUT_SIGN & is_sign) begin
                 case (rx_data)
