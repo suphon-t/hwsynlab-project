@@ -27,6 +27,8 @@
 `define STATE_INPUT 4'h5
 `define STATE_SHIFT_UPPER 4'h6
 `define STATE_COMMIT 4'h7
+`define STATE_DIVIDE 4'h8
+`define STATE_WAIT_DIVIDE 4'h9
 
 `define INPUT_SPECIAL 4'h0
 `define INPUT_SIGN 4'h1
@@ -84,8 +86,11 @@ module calculator(
     wire [47:0] b;
     reg [3:0] op = `OP_ADD;
     
-    wire [47:0] a_mul_b;
+    wire [47:0] a_mul_b, a_div_b;
     multiplier multiplier(a_mul_b, acc, b);
+    wire div_en;
+    assign div_en = state == `STATE_DIVIDE;
+    divider divider(div_busy, div_done, a_div_b, clock, div_en, acc, b);
     
     stringToFixedPoint s2fp(b, u6, u5, u4, u3, u2, u1, l6, l5, l4, l3, l2, l1);
     
@@ -216,10 +221,19 @@ module calculator(
         
         if (state == `STATE_COMMIT) begin
             case (op)
-                `OP_ADD: acc <= acc + b;
-                `OP_SUB: acc <= acc - b;
-                `OP_MUL: acc <= a_mul_b;
+                `OP_ADD: begin acc <= acc + b; state <= `STATE_INIT; end
+                `OP_SUB: begin acc <= acc - b; state <= `STATE_INIT; end
+                `OP_MUL: begin acc <= a_mul_b; state <= `STATE_INIT; end
+                `OP_DIV: state <= `STATE_DIVIDE;
             endcase
+        end
+        
+        if (state == `STATE_DIVIDE) begin
+            state <= `STATE_WAIT_DIVIDE;
+        end
+        
+        if (state == `STATE_WAIT_DIVIDE & div_done) begin
+            acc <= a_div_b;
             state <= `STATE_INIT;
         end
         
