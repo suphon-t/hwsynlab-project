@@ -25,7 +25,8 @@
 `define STATE_SEND_ECHO 4'h3
 `define STATE_WAIT_SEND_ECHO 4'h4
 `define STATE_INPUT 4'h5
-`define STATE_COMMIT 4'h6
+`define STATE_SHIFT_UPPER 4'h6
+`define STATE_COMMIT 4'h7
 
 `define INPUT_SPECIAL 4'h0
 `define INPUT_SIGN 4'h1
@@ -192,8 +193,22 @@ module calculator(
                 state <= `STATE_SEND_ECHO;
             end
             if (input_stage <= `INPUT_ENTER & is_enter) begin
-                state <= `STATE_COMMIT;
+                state <= `STATE_SHIFT_UPPER;
             end
+        end
+        
+        if (state == `STATE_SHIFT_UPPER) begin
+            if (u_cnt != 0) begin
+                u_cnt <= u_cnt - 1;
+                u6 <= 0;
+                u5 <= u6;
+                u4 <= u5;
+                u3 <= u4;
+                u2 <= u3;
+                u1 <= u2;
+            end
+            else
+                state <= `STATE_COMMIT;
         end
         
         if (state == `STATE_COMMIT) begin
